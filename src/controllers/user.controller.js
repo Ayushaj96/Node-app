@@ -5,6 +5,7 @@ const fs = require("fs");
 const csv = require("fast-csv");
 
 const Account  = require('../db/Account');
+const LEN = 12;
 
 const upload = async (req, res) => {
   try {
@@ -13,27 +14,48 @@ const upload = async (req, res) => {
     }
 
     let path = __basedir + "/uploads/" + req.file.filename;
-    
-    let data = []
+    let data = [], deposit = new Array(LEN).fill(0), withdraw = new Array(LEN).fill(0);
+    let info = {};
+
     fs.createReadStream(path)
       .pipe(csv.parse({ headers: true }))
       .on("error", (error) => {
         throw error.message;
       })
       .on("data", (row) => {
-        data.push(row)
+        if(row.Date != ''){
+          data.push(row);
+          var date = row.Date.split('/');
+          if(row.Deposit != ''){
+            deposit[date[0]-1] += parseInt(row.Deposit);
+          }
+          if(row.Withdraw != ''){
+            withdraw[date[0]-1] += parseInt(row.Withdraw);
+          }
+      }
       }).on("end", () => {   
+        var monthlyBalance = 0;
+        for(var i = 0; i < 12; i++){
+          monthlyBalance += (deposit[i] - withdraw[i]);
+        }
+        monthlyBalance /= LEN;
+        var CreditLimit = monthlyBalance*1.2;
         var Ac = new Account({
           username:'Aj',
-          transactions:data
+          transactions:data,
+          balance : parseInt(data[data.length-1].ClosingBalance),
+          creditLimit : CreditLimit
         })
+        // save data to Db
         Ac.save(function(error){
-          console.log(Ac);
             if(error){
                  throw error;
             }
         });  
-        console.log(" End of file import");
+        console.log(" End of file import : ", Ac);
+        info.balance = Ac.balance;
+        info.creditLimit = Ac.creditLimit;
+        res.send({ info });
       });
   } catch (error) {
     console.log(error);
@@ -41,7 +63,6 @@ const upload = async (req, res) => {
       message: "Could not upload the file: " + req.file.originalname,
     });
   }
-  res.send('done');
 };
 
 const test = catchAsync(async (req, res) => {
