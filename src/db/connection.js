@@ -5,7 +5,8 @@ const URI ="mongodb+srv://admin:admin@cluster0.sxjfb.mongodb.net/UPI?retryWrites
 const connectDB = async () => {
   await mongoose.connect(URI, {
     useUnifiedTopology: true,
-    useNewUrlParser: true
+    useNewUrlParser: true,
+    useCreateIndex: true
   });
   console.log('db connected..!');
 };

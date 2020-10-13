@@ -22,7 +22,7 @@ app.use(express.urlencoded({ extended: true }));
 // app.use(passport.initialize());
 // passport.use('jwt', jwtStrategy);
 
-app.use('', routes);
+app.use('/v1', routes);
 
 app.listen(3000, () => {
   console.log('Listening To port : 3000');
