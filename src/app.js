@@ -15,7 +15,7 @@ app.use(express.json());
 // parse urlencoded request body
 app.use(express.urlencoded({ extended: true }));
 
-app.use('/v1', routes);
+app.use('', routes);
 
 app.listen(3000, () => {
     console.log('Listening To port : 3000');

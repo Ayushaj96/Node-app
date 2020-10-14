@@ -6,13 +6,13 @@ const login = async(username, password) => {
 
     const user = await userService.getUserByUserName(username);
     if (!user || !(await user.isPasswordMatch(password))) {
-        return { status: httpStatus.UNAUTHORIZED, error: 'Incorrect email or password' };
+        return { status: httpStatus.UNAUTHORIZED, error: 'Incorrect username or password' };
     }
 
     // get account details
     const accountDetails = await userService.getAccountDetailsByUserName(username);
     if (!accountDetails) {
-        return { status: httpStatus.BAD_REQUEST, error: 'Please upload csv' };
+        return { msg: 'Please upload csv' };
     }
 
     result = {

@@ -1,7 +1,6 @@
 const bcrypt = require('bcryptjs');
 const httpStatus = require('http-status');
 const { User, Account } = require('../models');
-const ApiError = require('../utils/ApiError');
 const csv = require('csvtojson');
 
 let path = __dirname + "/../../upload/";
