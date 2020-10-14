@@ -23,7 +23,9 @@ app.listen(3000, () => {
 
 // send back a 404 error for any unknown api request
 app.use((req, res, next) => {
-    next('Not found');
+    var err = new Error('Not Found');
+    err.status = httpStatus.NOT_FOUND;
+    next(err);
 });
 
 module.exports = app;

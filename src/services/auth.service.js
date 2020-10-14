@@ -6,22 +6,15 @@ const login = async(username, password) => {
 
     const user = await userService.getUserByUserName(username);
     if (!user || !(await user.isPasswordMatch(password))) {
-        result = {
-            error: 'Incorrect email or password'
-        };
-        return result;
+        return { status: httpStatus.UNAUTHORIZED, error: 'Incorrect email or password' };
     }
 
     // get account details
     const accountDetails = await userService.getAccountDetailsByUserName(username);
     if (!accountDetails) {
-        result = {
-            error: 'Please upload csv'
-        };
-        return httpStatus.UNAUTHORIZED, result;
+        return { status: httpStatus.BAD_REQUEST, error: 'Please upload csv' };
     }
 
-    console.log('Details', accountDetails);
     result = {
         'creditLimit': accountDetails.creditLimit,
         'balance': accountDetails.balance,

@@ -1,35 +1,40 @@
 const bcrypt = require('bcryptjs');
 const httpStatus = require('http-status');
 const { User, Account } = require('../models');
+const ApiError = require('../utils/ApiError');
 const csv = require('csvtojson');
 
 let path = __dirname + "/../../upload/";
 
-
 const createUser = async(userBody) => {
     let result, salt, hashPassword;
-    if (await User.findOne({ username: userBody.username })) {
+    try {
+        if (await User.findOne({ username: userBody.username })) {
+            return { status: httpStatus.BAD_REQUEST, error: 'UserName already Exists' };
+        }
+        // hashed password
+        salt = await bcrypt.genSalt();
+        hashPassword = await bcrypt.hash(userBody.password, salt);
+
+        userBody.password = hashPassword;
+
+        // generate 8 digit account number
+        userBody.accountnumber = Math.round(Math.random() * 100000000);
+
+        const user = await User.create(userBody);
         result = {
-            error: 'UserName already exists'
-        };
+            'name': user.name,
+            'username': user.username,
+            'accountno': user.accountnumber
+        }
         return result;
+    } catch (err) {
+        console.log(err);
+        return {
+            status: httpStatus.INTERNAL_SERVER_ERROR,
+            error: 'Error occured in user Registration'
+        };
     }
-    // hashed password
-    salt = await bcrypt.genSalt();
-    hashPassword = await bcrypt.hash(userBody.password, salt);
-
-    userBody.password = hashPassword;
-
-    // generate 8 digit account number
-    userBody.accountnumber = Math.round(Math.random() * 100000000);
-
-    const user = await User.create(userBody);
-    result = {
-        'name': user.name,
-        'username': user.username,
-        'accountno': user.accountnumber
-    }
-    return result;
 };
 
 
@@ -63,25 +68,32 @@ const getMonthlyBalance = (csvData) => {
 
 const uploadcsv = async(req) => {
     let csvData, accountDetails, creditLimit, result;
-    // read csv data
-    csvData = await csv().fromFile(path + req.file.filename);
-    creditLimit = getCreditLimit(csvData);
+    try {
+        // read csv data
+        csvData = await csv().fromFile(path + req.file.filename);
+        creditLimit = getCreditLimit(csvData);
 
-    accountDetails = {
-        'username': req.user.sub,
-        'transactions': csvData,
-        'creditLimit': creditLimit,
-        'balance': csvData[csvData.length - 1]['Closing Balance'],
-        'rateOfInterest': 0
-    }
+        accountDetails = {
+            'username': req.user.sub,
+            'transactions': csvData,
+            'creditLimit': creditLimit,
+            'balance': csvData[csvData.length - 1]['Closing Balance'],
+            'rateOfInterest': 0
+        }
 
-    const account = await Account.create(accountDetails);
-    result = {
-        'creditLimit': account.creditLimit,
-        'balance': account.balance,
-        'rateOfInterest': 0
+        const account = await Account.create(accountDetails);
+        result = {
+            'creditLimit': account.creditLimit,
+            'balance': account.balance,
+            'rateOfInterest': account.rateOfInterest
+        }
+        return result;
+    } catch (error) {
+        return {
+            status: httpStatus.INTERNAL_SERVER_ERROR,
+            error: 'Error occured in Upload CSV'
+        };
     }
-    return result;
 };
 
 const getUserByUserName = async(username) => {
