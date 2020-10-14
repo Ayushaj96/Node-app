@@ -1,24 +1,9 @@
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
 const config = require('../config/config');
-
-const generateToken = (userId, expires, secret = config.JWT_SECRET) => {
-  const payload = {
-    sub: userId,
-    iat: moment().unix(),
-    exp: expires.unix(),
-  };
-  return jwt.sign(payload, secret);
-};
-
-const generateAuthTokens = async (user) => {
-  const accessTokenExpires = moment().add(config.JWT_ACCESS_EXPIRATION_MINUTES, 'minutes');
-  const accessToken = generateToken(user.GLN, accessTokenExpires);
-  return accessToken;
-};
+const httpStatus = require('http-status');
 
 const verifyAuthToken = async(req, res, next) => {
-
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     let response = {};
@@ -28,9 +13,9 @@ const verifyAuthToken = async(req, res, next) => {
         response.message = httpStatus[httpStatus.UNAUTHORIZED];
         response.data = "Token not found";
         return next(res.status(response.status).send(response));
-    } else {
 
-        jwt.verify(token, config.JWT_SECRET,(err, user) => {
+    } else {
+        jwt.verify(token, config.JWT_SECRET, (err, user) => {
 
             if (err) {
                 response.status = httpStatus.FORBIDDEN;
@@ -51,7 +36,23 @@ const verifyAuthToken = async(req, res, next) => {
     }
 }
 
+const generateToken = (userId, expires, secret = config.JWT_SECRET) => {
+    const payload = {
+        sub: userId,
+        iat: moment().unix(),
+        exp: expires.unix(),
+    };
+    return jwt.sign(payload, secret);
+};
+
+const generateAuthToken = async(user) => {
+    const accessTokenExpires = moment().add(config.JWT_ACCESS_EXPIRATION_MINUTES, 'minutes');
+    const accessToken = generateToken(user, accessTokenExpires);
+    return accessToken;
+};
+
+
 module.exports = {
-  generateAuthTokens,
-  verifyAuthToken,
+    generateAuthToken,
+    verifyAuthToken,
 };
