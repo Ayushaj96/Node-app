@@ -9,9 +9,9 @@ const register = catchAsync(async (req, res) => {
 
 const login = catchAsync(async (req, res) => {
   const { username, password } = req.body;
-  const user = await authService.login(username, password);
-  const tokens = '';//await tokenService.generateAuthTokens(user);
-  res.send({ user, tokens });
+  const account = await authService.login(username, password);
+  const token = await tokenService.generateAuthTokens(username);
+  res.send({ account, token });
 });
 
 module.exports = {

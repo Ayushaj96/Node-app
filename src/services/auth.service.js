@@ -9,13 +9,30 @@ const ApiError = require('../utils/ApiError');
  * @returns {Promise<User>}
  */
 const login = async (username, password) => {
-  console.log(username);
+  let result;
+
   const user = await userService.getUserByUserName(username);
-  console.log(user);
   if (!user || !(await user.isPasswordMatch(password))) {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
   }
-  return user;
+
+  // get account details
+  const accountDetails = await userService.getAccountDetailsByUserName(username);
+  if(!accountDetails){
+    result = {
+      error : 'Please upload csv'
+    };
+    return result;
+  }
+
+  console.log('Details', accountDetails);
+  result = {
+    'creditLimit' : accountDetails.creditLimit,
+    'balance' : accountDetails.balance,
+    'rateOfInterest' : accountDetails.rateOfInterest
+  }
+
+  return result;
 };
 
 

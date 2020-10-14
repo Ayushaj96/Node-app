@@ -1,11 +1,12 @@
 
 const bcrypt = require('bcryptjs');
 const httpStatus = require('http-status');
-const { User } = require('../models');
+const { User , Account } = require('../models');
 const ApiError = require('../utils/ApiError');
 const csv=require('csvtojson');
 
-let path = __basedir + "/upload/";
+let path = __dirname + "/../../upload/";
+
 /**
  * Create a user
  * @param {Object} userBody
@@ -35,24 +36,50 @@ const createUser = async (userBody) => {
 };
 
 /**
- * Get user by email
- * @param {string} email
+ * Get user by username
+ * @param {string} username
  * @returns {Promise<User>}
  */
 const getUserByUserName = async (username) => {
   return User.findOne({ username : username });
 };
 
+/**
+ * Get account details by username
+ * @param {string} username
+ * @returns {Promise<User>}
+ */
+const getAccountDetailsByUserName = async (username) => {
+  return Account.findOne({ username });
+};
+
 const uploadcsv = async (req) => {
-    let csvData;
+    let csvData, accountDetails, creditLimit, result;
     // read csv data
-    csvData = await csv().fromFile(path + req.filename);
-  
-    return '';
+    
+    csvData = await csv().fromFile(path + req.file.filename);
+    console.log(csvData);
+    accountDetails = {
+      'username': 'Ayush',
+      'transactions': csvData,
+      'creditLimit': 0,
+      'balance': csvData[csvData.length - 1]['Closing Balance'],
+      'rateOfInterest': 0
+    }
+
+    const account = await Account.create(accountDetails);
+
+    result = {
+      'creditLimit': account.creditLimit,
+      'balance': account.balance,
+      'rateOfInterest': 0
+    }
+    return result;
 };
 
 module.exports = {
   createUser,
   getUserByUserName,
   uploadcsv,
+  getAccountDetailsByUserName,
 };

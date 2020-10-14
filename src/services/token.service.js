@@ -26,12 +26,7 @@ const generateToken = (userId, expires, secret = config.JWT_SECRET) => {
 const generateAuthTokens = async (user) => {
   const accessTokenExpires = moment().add(config.JWT_ACCESS_EXPIRATION_MINUTES, 'minutes');
   const accessToken = generateToken(user.GLN, accessTokenExpires);
-  return {
-    access: {
-      token: accessToken,
-      expires: accessTokenExpires.toDate(),
-    },
-  };
+  return accessToken;
 };
 
 module.exports = {
