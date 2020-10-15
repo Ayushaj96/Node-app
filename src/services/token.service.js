@@ -9,24 +9,19 @@ const verifyAuthToken = async(req, res, next) => {
     let response = {};
 
     if (token == null) {
-        response.status = httpStatus.UNAUTHORIZED;
-        response.message = httpStatus[httpStatus.UNAUTHORIZED];
-        response.data = "Token not found";
-        return next(res.status(response.status).send(response));
+        response.error = "Token not found";
+        return next(res.status(httpStatus.UNAUTHORIZED).send(response));
 
     } else {
         jwt.verify(token, config.JWT_SECRET, (err, user) => {
 
             if (err) {
-                response.status = httpStatus.FORBIDDEN;
-                response.message = httpStatus[httpStatus.FORBIDDEN];
-
                 if (err instanceof jwt.TokenExpiredError) {
-                    response.data = "Token expired";
+                    response.error = "Token expired";
                 } else if (err instanceof jwt.JsonWebTokenError) {
-                    response.data = "Invalid token";
+                    response.error = "Invalid token";
                 }
-                return next(res.status(response.status).send(response));
+                return next(res.status(httpStatus.FORBIDDEN).send(response));
 
             } else {
                 req.user = user;
